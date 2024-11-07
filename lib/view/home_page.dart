@@ -1,10 +1,7 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:ecommerce/model/get_product_model.dart';
 import 'package:ecommerce/model/product_response_model.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,20 +11,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  ProductResponseModel productResponseModel = ProductResponseModel();
+  // List of products to store fetched data
   List<ProductResponseModel> products = [];
-  getData() async {
-    final response = await Dio().get("https://fakestoreapi.com/products");
-    List<dynamic> data = response.data;
+  // Boolean to track loading state
+  bool isLoading = true;
 
-    print(response.data);
-    productResponseModel = ProductResponseModel.fromJson(response.data);
+  // Method to fetch data from the API
+  getData() async {
+    try {
+      final response = await Dio().get("https://fakestoreapi.com/products");
+      List<dynamic> data = response.data;
+      setState(() {
+        products = data
+            .map((productJson) => ProductResponseModel.fromJson(productJson))
+            .toList();
+        isLoading = false; // Data is fetched, stop loading
+      });
+    } catch (e) {
+      print("Failed to fetch products: $e");
+      setState(() {
+        isLoading = false; // Stop loading on error
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    getData();
+    getData(); // Fetch data when the page is loaded
   }
 
   @override
@@ -57,15 +68,14 @@ class _HomePageState extends State<HomePage> {
               elevation: 5,
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(
-                      0xffF8F8F8), // Background color for card style
-                  borderRadius: BorderRadius.circular(12), // Rounded corners
+                  color: const Color(0xffF8F8F8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const TextField(
                   decoration: InputDecoration(
                     hintText: "Search items",
                     hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                    border: InputBorder.none, // No outline border
+                    border: InputBorder.none,
                     prefixIcon: Icon(Icons.search_rounded),
                     contentPadding: EdgeInsets.symmetric(vertical: 15.0),
                   ),
@@ -73,66 +83,74 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 8.0,
-                crossAxisSpacing: 8.0,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: products.length, // Number of items to display
-              itemBuilder: (context, index) {
-                return Card(
-                  color: const Color(0xffF8F8F8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 9,
-                  child: Padding(
+          // Show a loading indicator if data is still loading
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Expanded(
+                  child: GridView.builder(
                     padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              "assets/images/image 268.png",
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8.0,
+                      crossAxisSpacing: 8.0,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: products.length, // Use the fetched data length
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return Card(
+                        color: const Color(0xffF8F8F8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 9,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    product.image ?? "d", // Use product's image
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                product.title.toString(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "${product.price}/-",
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900),
+                                  ),
+                                  Image.asset(
+                                    "assets/images/Group 53.png",
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Leather Sofa",
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "1500/-",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w900),
-                            ),
-                            Image.asset(
-                              "assets/images/Group 53.png",
-                              height: 24,
-                              width: 24,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
+                ),
         ],
       ),
     );
