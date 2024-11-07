@@ -16,29 +16,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   ProductResponseModel productResponseModel = ProductResponseModel();
   List<ProductResponseModel> products = [];
-  // getData() async {
-  //   final response = await Dio().get("https://fakestoreapi.com/products");
-  //   final responseBody = jsonDecode(response.data) as List;
-  //
-  //   final allProducts = responseBody['data']
-  //       .map((e) => ProductResponseModel.fromJson(e))
-  //       .toList();
-  //
-  //   print(response.data);
-  //   productResponseModel = ProductResponseModel.fromJson(response.data);
-  //   // for (var i = 0; i < response.data.length; i++) {
-  //   //   productResponseModel = ProductResponseModel.fromJson(response.data[i]);
-  //   //   print("${productResponseModel.id} ${productResponseModel.title}");
-  //   //   // productResponseModel.products.toList();
-  //   // }
-  //   // print("-------------Length-------------");
-  //   // print(products.length);
-  // }
+  getData() async {
+    final response = await Dio().get("https://fakestoreapi.com/products");
+    List<dynamic> data = response.data;
+
+    print(response.data);
+    productResponseModel = ProductResponseModel.fromJson(response.data);
+  }
 
   @override
   void initState() {
     super.initState();
-    // getData();
+    getData();
   }
 
   @override
